@@ -1,6 +1,6 @@
-# MemECP - Meme Generation MCP Server
+# MemeCP - Meme Generation MCP Server
 
-A Model Context Protocol (MCP) server built with TypeScript that provides meme generation tools using the Memegen.link API.
+A fun test project! This is a Model Context Protocol (MCP) server built with TypeScript that provides meme generation tools using the Memegen.link API. Created purely for experimentation and entertainment - no serious intent other than having some fun with MCP and memes! 🎉
 
 ## Features
 
@@ -190,6 +190,36 @@ This server uses the [Memegen.link API](https://memegen.link) which provides:
 - `pnpm run build` - Build TypeScript to JavaScript
 - `pnpm run dev` - Run in development mode
 - `pnpm run watch` - Run with file watching
+
+## Publishing
+
+This package is automatically published to npm via GitHub Actions when a new version tag is pushed.
+
+### For Maintainers
+
+1. **Update the version** in `package.json` (follow [semantic versioning](https://semver.org/))
+2. **Update the repository URLs** in `package.json` to match your actual GitHub repository
+3. **Set up NPM_TOKEN secret** in your GitHub repository:
+   - Go to [npm.com](https://www.npmjs.com) → Access Tokens → Generate New Token (Automation)
+   - Add the token as `NPM_TOKEN` in your GitHub repository settings → Secrets and variables → Actions
+4. **Create and push a version tag**:
+   ```bash
+   git tag v1.0.1
+   git push origin v1.0.1
+   ```
+5. **The GitHub Action will automatically**:
+   - Build the TypeScript code
+   - Run tests (if any)
+   - Publish to npm
+
+### Manual Publishing
+
+For manual publishing (not recommended for production):
+
+```bash
+pnpm run build
+pnpm publish
+```
 
 ## License
 

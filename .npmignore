@@ -1,0 +1,47 @@
+# Source files (TypeScript)
+src/
+tsconfig.json
+
+# Development dependencies
+node_modules/
+.github/
+.git/
+
+# Development files
+*.log
+*.env
+.env*
+
+# Testing
+test/
+tests/
+*.test.*
+*.spec.*
+coverage/
+
+# Build tools
+.nyc_output
+.cache
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package managers
+pnpm-lock.yaml
+pnpm-workspace.yaml
+yarn.lock
+package-lock.json
+
+# Other
+.eslintrc*
+.prettierrc*
+jest.config.*
+*.tsbuildinfo 
