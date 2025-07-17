@@ -15,9 +15,9 @@ export const getMemeTemplates = async () => {
 
   const response = await fetch("https://api.imgflip.com/get_memes");
   const data = await response.json();
-  memeTemplates = data.data.memes.slice(0, 10);
+  memeTemplates = data.data.memes; //.slice(0, 10);
 
-  console.log("Meme templates fetched");
+  // console.log("Meme templates fetched");
 
   return memeTemplates;
 };
