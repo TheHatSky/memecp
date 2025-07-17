@@ -7,7 +7,10 @@ import {
   ListToolsRequestSchema,
   CallToolRequest,
 } from "@modelcontextprotocol/sdk/types.js";
-import { showMeme, showMemeToolDefinition } from "./tools/showMeme.js";
+import {
+  showMemeTemplate,
+  showMemeTemplateToolDefinition,
+} from "./tools/showMemeTemplate.js";
 import {
   showAllMemeTemplates,
   showAllMemeTemplatesToolDefinition,
@@ -32,7 +35,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       showAllMemeTemplatesToolDefinition,
-      showMemeToolDefinition,
+      showMemeTemplateToolDefinition,
       composeMemeToolDefinition,
     ],
   };
@@ -46,23 +49,18 @@ server.setRequestHandler(
 
     try {
       switch (name) {
-        case "show_all_meme_templates": {
+        case showAllMemeTemplatesToolDefinition.name: {
           return await showAllMemeTemplates();
         }
 
-        case "show_meme": {
-          return await showMeme(args as { name: string });
+        case showMemeTemplateToolDefinition.name: {
+          return await showMemeTemplate(
+            args as Parameters<typeof showMemeTemplate>[0]
+          );
         }
 
-        case "compose_meme": {
-          return await composeMeme(
-            args as {
-              text: string;
-              template?: string;
-              topText?: string;
-              bottomText?: string;
-            }
-          );
+        case composeMemeToolDefinition.name: {
+          return await composeMeme(args as Parameters<typeof composeMeme>[0]);
         }
 
         default:

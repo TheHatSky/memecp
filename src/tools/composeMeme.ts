@@ -10,20 +10,17 @@ export const composeMemeToolDefinition = {
       text: {
         type: "string",
         description:
-          "The text content for the meme (will be split appropriately based on template)",
+          "The text content for the meme. Will be split appropriately based on template, or you can specify a `|` to split the text into top and bottom text.",
       },
       template: {
         type: "string",
         description:
           "Optional: Specific template name to use. If not provided, an appropriate template will be selected automatically",
       },
-      topText: {
-        type: "string",
-        description: "Optional: Specific text for the top of the meme",
-      },
-      bottomText: {
-        type: "string",
-        description: "Optional: Specific text for the bottom of the meme",
+      returnImage: {
+        type: "boolean",
+        description: "Whether to return the image in the response",
+        default: true,
       },
     },
     required: ["text"],
@@ -182,12 +179,6 @@ async function selectTemplate(
     if (distractedBf) return distractedBf.id;
   }
 
-  // Default to Drake template if available (popular and versatile)
-  const drake = templates.find(
-    (t) => t.name.toLowerCase().includes("drake") || t.id.includes("drake")
-  );
-  if (drake) return drake.id;
-
   // Default to a common meme template (Fry is usually available)
   const fry = templates.find(
     (t) => t.name.toLowerCase().includes("fry") || t.id.includes("fry")
@@ -237,15 +228,9 @@ function splitText(
 export async function composeMeme(args: {
   text: string;
   template?: string;
-  topText?: string;
-  bottomText?: string;
+  returnImage?: boolean;
 }) {
-  const {
-    text,
-    template: userTemplate,
-    topText: userTopText,
-    bottomText: userBottomText,
-  } = args;
+  const { text, template: userTemplate, returnImage } = args;
 
   try {
     // Select appropriate template
@@ -255,16 +240,10 @@ export async function composeMeme(args: {
     let topText: string;
     let bottomText: string;
 
-    if (userTopText || userBottomText) {
-      // Use user-specified text
-      topText = userTopText || "";
-      bottomText = userBottomText || "";
-    } else {
-      // Auto-split the text
-      const split = splitText(text, templateId);
-      topText = split.topText;
-      bottomText = split.bottomText;
-    }
+    // Auto-split the text
+    const split = splitText(text, templateId);
+    topText = split.topText;
+    bottomText = split.bottomText;
 
     // Encode text for URL
     const encodedTopText = encodeText(topText);
@@ -297,28 +276,35 @@ export async function composeMeme(args: {
       );
     }
 
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const base64Data = Buffer.from(imageBuffer).toString("base64");
+    if (returnImage) {
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const base64Data = Buffer.from(imageBuffer).toString("base64");
 
-    // Get template name for display
-    const templates = await getMemeTemplates();
-    const template = templates.find((t) => t.id === templateId);
-    const templateName = template?.name || `Template ID: ${templateId}`;
+      return {
+        content: [
+          {
+            type: "image",
+            data: base64Data,
+            mimeType: "image/png",
+          },
+          {
+            type: "text",
+            text: memeUrl,
+          },
+        ],
+      };
+    }
+
+    // // Get template name for display
+    // const templates = await getMemeTemplates();
+    // const template = templates.find((t) => t.id === templateId);
+    // const templateName = template?.name || `Template ID: ${templateId}`;
 
     return {
       content: [
-        // {
-        //   type: "image",
-        //   data: base64Data,
-        //   mimeType: "image/png",
-        // },
         {
           type: "text",
-          text: `Generated meme using ${templateName}\nTop text: "${topText}"\nBottom text: "${bottomText}"\nMemegen.link URL: ${memeUrl}`,
-        },
-        {
-          type: "text",
-          text: `Now you have to open it in browser: ${memeUrl}`,
+          text: memeUrl,
         },
       ],
     };

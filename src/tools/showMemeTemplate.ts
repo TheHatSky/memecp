@@ -1,7 +1,7 @@
 import { getMemeTemplates } from "../getMemeTemplates.js";
 
-export const showMemeToolDefinition = {
-  name: "show_meme",
+export const showMemeTemplateToolDefinition = {
+  name: "show_meme_template",
   description: "Show details for a specific meme template by name",
   inputSchema: {
     type: "object",
@@ -15,7 +15,7 @@ export const showMemeToolDefinition = {
   },
 };
 
-export async function showMeme(args: { name: string }) {
+export async function showMemeTemplate(args: { name: string }) {
   const { name: memeName } = args;
   const templates = await getMemeTemplates();
 
