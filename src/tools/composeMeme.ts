@@ -52,7 +52,7 @@ async function selectTemplate(
   text: string,
   userTemplate?: string
 ): Promise<string> {
-  const templates = await getMemeTemplates();
+  const templates = await getMemeTemplates(1, 10000000000);
 
   // If user specified a template, try to use it
   if (userTemplate) {

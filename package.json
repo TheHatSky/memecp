@@ -1,8 +1,11 @@
 {
   "name": "memecp",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A simple Model Context Protocol (MCP) server",
   "main": "dist/index.js",
+  "bin": {
+    "memecp": "dist/index.js"
+  },
   "type": "module",
   "files": [
     "dist/**/*",

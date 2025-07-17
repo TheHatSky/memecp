@@ -10,8 +10,9 @@ type MemeTemplate = {
 
 let memeTemplates: Array<MemeTemplate> = [];
 
-export const getMemeTemplates = async () => {
-  if (memeTemplates.length !== 0) return memeTemplates;
+export const getMemeTemplates = async (page: number, limit: number) => {
+  if (memeTemplates.length !== 0)
+    return memeTemplates.slice((page - 1) * limit, page * limit);
 
   const response = await fetch("https://api.memegen.link/templates/");
   const data = await response.json();
@@ -19,5 +20,5 @@ export const getMemeTemplates = async () => {
 
   // console.log("Meme templates fetched");
 
-  return memeTemplates;
+  return memeTemplates.slice((page - 1) * limit, page * limit);
 };

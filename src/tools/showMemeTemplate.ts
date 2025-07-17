@@ -17,7 +17,7 @@ export const showMemeTemplateToolDefinition = {
 
 export async function showMemeTemplate(args: { name: string }) {
   const { name: memeName } = args;
-  const templates = await getMemeTemplates();
+  const templates = await getMemeTemplates(1, 10000000000);
 
   // Find template by name or ID
   let template = templates.find(

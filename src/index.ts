@@ -50,7 +50,9 @@ server.setRequestHandler(
     try {
       switch (name) {
         case showAllMemeTemplatesToolDefinition.name: {
-          return await showAllMemeTemplates();
+          return await showAllMemeTemplates(
+            args as Parameters<typeof showAllMemeTemplates>[0]
+          );
         }
 
         case showMemeTemplateToolDefinition.name: {
