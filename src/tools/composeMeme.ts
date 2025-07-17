@@ -3,7 +3,7 @@ import { getMemeTemplates } from "../getMemeTemplates.js";
 export const composeMemeToolDefinition = {
   name: "compose_meme",
   description:
-    "Generate a meme by selecting an appropriate template and adding text using Imgflip API",
+    "Generate a meme by selecting an appropriate template and adding text using Memegen.link API",
   inputSchema: {
     type: "object",
     properties: {
@@ -30,9 +30,26 @@ export const composeMemeToolDefinition = {
   },
 };
 
-// Imgflip API credentials - should be set via environment variables
-const IMGFLIP_USERNAME = process.env.IMGFLIP_USERNAME || "imgflip_hubot";
-const IMGFLIP_PASSWORD = process.env.IMGFLIP_PASSWORD || "imgflip_hubot";
+// Optional API key for authenticated requests (removes watermark)
+const MEMEGEN_API_KEY = process.env.MEMEGEN_API_KEY;
+
+function encodeText(text: string): string {
+  // Handle special characters for memegen.link URL encoding
+  return text
+    .replace(/_/g, "__") // underscore → double underscore
+    .replace(/-/g, "--") // dash → double dash
+    .replace(/ /g, "_") // space → underscore
+    .replace(/\?/g, "~q") // question mark → ~q
+    .replace(/&/g, "~a") // ampersand → ~a
+    .replace(/%/g, "~p") // percentage → ~p
+    .replace(/#/g, "~h") // hashtag → ~h
+    .replace(/\//g, "~s") // slash → ~s
+    .replace(/\\/g, "~b") // backslash → ~b
+    .replace(/</g, "~l") // less-than → ~l
+    .replace(/>/g, "~g") // greater-than → ~g
+    .replace(/"/g, "''") // double quote → two single quotes
+    .replace(/\n/g, "~n"); // newline → ~n
+}
 
 async function selectTemplate(
   text: string,
@@ -49,7 +66,15 @@ async function selectTemplate(
       (t) => t.name.toLowerCase() === normalizedTemplate.toLowerCase()
     );
     if (exactMatch) {
-      return exactMatch.id.toString();
+      return exactMatch.id;
+    }
+
+    // Find exact ID match
+    const idMatch = templates.find(
+      (t) => t.id.toLowerCase() === normalizedTemplate.toLowerCase()
+    );
+    if (idMatch) {
+      return idMatch.id;
     }
 
     // Find partial name match
@@ -59,16 +84,19 @@ async function selectTemplate(
         normalizedTemplate.toLowerCase().includes(t.name.toLowerCase())
     );
     if (partialMatch) {
-      return partialMatch.id.toString();
+      return partialMatch.id;
     }
 
-    // If numeric ID provided, validate it exists
-    const numericId = parseInt(normalizedTemplate);
-    if (!isNaN(numericId)) {
-      const idMatch = templates.find((t) => t.id === numericId.toString());
-      if (idMatch) {
-        return numericId.toString();
-      }
+    // Find match in keywords
+    const keywordMatch = templates.find(
+      (t) =>
+        t.keywords &&
+        t.keywords.some((keyword) =>
+          keyword.toLowerCase().includes(normalizedTemplate.toLowerCase())
+        )
+    );
+    if (keywordMatch) {
+      return keywordMatch.id;
     }
   }
 
@@ -84,9 +112,10 @@ async function selectTemplate(
     const twoButtons = templates.find(
       (t) =>
         t.name.toLowerCase().includes("two buttons") ||
-        t.name.toLowerCase().includes("button")
+        t.id.includes("button") ||
+        (t.keywords && t.keywords.some((k) => k.includes("choice")))
     );
-    if (twoButtons) return twoButtons.id.toString();
+    if (twoButtons) return twoButtons.id;
   }
 
   // Find "Expanding Brain" template for intelligence
@@ -98,15 +127,21 @@ async function selectTemplate(
     const expandingBrain = templates.find(
       (t) =>
         t.name.toLowerCase().includes("brain") ||
-        t.name.toLowerCase().includes("expanding")
+        t.id.includes("brain") ||
+        (t.keywords && t.keywords.some((k) => k.includes("brain")))
     );
-    if (expandingBrain) return expandingBrain.id.toString();
+    if (expandingBrain) return expandingBrain.id;
   }
 
   // Find "Drake" template for preferences
-  if (lowerText.includes("like") && lowerText.includes("dislike")) {
-    const drake = templates.find((t) => t.name.toLowerCase().includes("drake"));
-    if (drake) return drake.id.toString();
+  if (
+    (lowerText.includes("like") && lowerText.includes("dislike")) ||
+    lowerText.includes("prefer")
+  ) {
+    const drake = templates.find(
+      (t) => t.name.toLowerCase().includes("drake") || t.id.includes("drake")
+    );
+    if (drake) return drake.id;
   }
 
   // Find "This is Fine" template
@@ -115,40 +150,52 @@ async function selectTemplate(
     lowerText.includes("ok") ||
     lowerText.includes("disaster")
   ) {
-    const thisIsFine = templates.find((t) =>
-      t.name.toLowerCase().includes("fine")
+    const thisIsFine = templates.find(
+      (t) => t.name.toLowerCase().includes("fine") || t.id.includes("fine")
     );
-    if (thisIsFine) return thisIsFine.id.toString();
+    if (thisIsFine) return thisIsFine.id;
   }
 
   // Find "Change My Mind" template
   if (lowerText.includes("change") && lowerText.includes("mind")) {
     const changeMind = templates.find(
       (t) =>
-        t.name.toLowerCase().includes("change") &&
-        t.name.toLowerCase().includes("mind")
+        (t.name.toLowerCase().includes("change") &&
+          t.name.toLowerCase().includes("mind")) ||
+        t.id.includes("cmm") ||
+        t.id.includes("change")
     );
-    if (changeMind) return changeMind.id.toString();
+    if (changeMind) return changeMind.id;
   }
 
-  // Find "Is This a Pigeon" template for questions
+  // Find "Distracted Boyfriend" template for comparisons
   if (
-    lowerText.includes("?") ||
-    lowerText.includes("question") ||
-    lowerText.includes("is this")
+    lowerText.includes("distract") ||
+    (lowerText.includes("look") && lowerText.includes("at"))
   ) {
-    const pigeon = templates.find((t) =>
-      t.name.toLowerCase().includes("pigeon")
+    const distractedBf = templates.find(
+      (t) =>
+        t.name.toLowerCase().includes("distracted") ||
+        t.id.includes("boyfriend") ||
+        t.id.includes("distracted")
     );
-    if (pigeon) return pigeon.id.toString();
+    if (distractedBf) return distractedBf.id;
   }
 
-  // Default to Drake Hotline Bling (most popular and versatile)
-  const drake = templates.find((t) => t.name.toLowerCase().includes("drake"));
-  if (drake) return drake.id.toString();
+  // Default to Drake template if available (popular and versatile)
+  const drake = templates.find(
+    (t) => t.name.toLowerCase().includes("drake") || t.id.includes("drake")
+  );
+  if (drake) return drake.id;
+
+  // Default to a common meme template (Fry is usually available)
+  const fry = templates.find(
+    (t) => t.name.toLowerCase().includes("fry") || t.id.includes("fry")
+  );
+  if (fry) return fry.id;
 
   // Ultimate fallback - first template
-  return templates[0].id.toString();
+  return templates[0].id;
 }
 
 function splitText(
@@ -171,7 +218,7 @@ function splitText(
   // If no separator found, try to split intelligently based on template
   const words = text.split(" ");
 
-  if (template === "brain") {
+  if (template.includes("brain")) {
     // For expanding brain, use all text in bottom
     return {
       topText: "",
@@ -219,42 +266,34 @@ export async function composeMeme(args: {
       bottomText = split.bottomText;
     }
 
-    // Prepare form data for Imgflip API
-    const formData = new URLSearchParams();
-    formData.append("template_id", templateId);
-    formData.append("username", IMGFLIP_USERNAME);
-    formData.append("password", IMGFLIP_PASSWORD);
-    formData.append("text0", topText);
-    formData.append("text1", bottomText);
+    // Encode text for URL
+    const encodedTopText = encodeText(topText);
+    const encodedBottomText = encodeText(bottomText);
 
-    // Call Imgflip caption_image API
-    const response = await fetch("https://api.imgflip.com/caption_image", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: formData.toString(),
-    });
+    // Build meme URL
+    let memeUrl = `https://api.memegen.link/images/${templateId}`;
 
-    if (!response.ok) {
-      throw new Error(
-        `Imgflip API request failed: ${response.status} ${response.statusText}`
-      );
+    if (encodedTopText || encodedBottomText) {
+      memeUrl += `/${encodedTopText || "_"}/${encodedBottomText || "_"}.png`;
+    } else {
+      memeUrl += ".png";
     }
 
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(
-        `Imgflip API error: ${result.error_message || "Unknown error"}`
-      );
+    // Add API key if available
+    if (MEMEGEN_API_KEY) {
+      memeUrl += `?api_key=${MEMEGEN_API_KEY}`;
     }
 
     // Fetch the generated meme image
-    const imageResponse = await fetch(result.data.url);
+    const headers: Record<string, string> = {};
+    if (MEMEGEN_API_KEY) {
+      headers["X-API-KEY"] = MEMEGEN_API_KEY;
+    }
+
+    const imageResponse = await fetch(memeUrl, { headers });
     if (!imageResponse.ok) {
       throw new Error(
-        `Failed to fetch generated meme: ${imageResponse.status}`
+        `Failed to fetch generated meme: ${imageResponse.status} ${imageResponse.statusText}`
       );
     }
 
@@ -268,14 +307,18 @@ export async function composeMeme(args: {
 
     return {
       content: [
+        // {
+        //   type: "image",
+        //   data: base64Data,
+        //   mimeType: "image/png",
+        // },
         {
-          type: "image",
-          data: base64Data,
-          mimeType: "image/jpeg",
+          type: "text",
+          text: `Generated meme using ${templateName}\nTop text: "${topText}"\nBottom text: "${bottomText}"\nMemegen.link URL: ${memeUrl}`,
         },
         {
           type: "text",
-          text: `Generated meme using ${templateName}\nTop text: "${topText}"\nBottom text: "${bottomText}"\nImgflip URL: ${result.data.page_url}`,
+          text: `Now you have to open it in browser: ${memeUrl}`,
         },
       ],
     };

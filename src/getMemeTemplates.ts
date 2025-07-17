@@ -1,11 +1,11 @@
 type MemeTemplate = {
-  box_count: number;
-  captions: number;
-  height: number;
-  id: string;
   name: string;
+  id: string;
   url: string;
-  width: number;
+  example: string;
+  keywords: string[];
+  styles?: string[];
+  blank?: string;
 };
 
 let memeTemplates: Array<MemeTemplate> = [];
@@ -13,9 +13,9 @@ let memeTemplates: Array<MemeTemplate> = [];
 export const getMemeTemplates = async () => {
   if (memeTemplates.length !== 0) return memeTemplates;
 
-  const response = await fetch("https://api.imgflip.com/get_memes");
+  const response = await fetch("https://api.memegen.link/templates/");
   const data = await response.json();
-  memeTemplates = data.data.memes; //.slice(0, 10);
+  memeTemplates = data;
 
   // console.log("Meme templates fetched");
 
