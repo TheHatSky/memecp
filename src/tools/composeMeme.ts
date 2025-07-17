@@ -10,7 +10,7 @@ export const composeMemeToolDefinition = {
       text: {
         type: "string",
         description:
-          "The text content for the meme. Will be split appropriately based on template, or you can specify a `|` to split the text into top and bottom text.",
+          "The text content for the meme. Will be split appropriately based on template, or you can once specify a `|` to split the text into top and bottom text.",
       },
       template: {
         type: "string",

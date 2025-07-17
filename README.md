@@ -1,14 +1,14 @@
-# MemECP - Simple MCP Server
+# MemECP - Meme Generation MCP Server
 
-A simple Model Context Protocol (MCP) server built with TypeScript that provides basic utility tools.
+A Model Context Protocol (MCP) server built with TypeScript that provides meme generation tools using the Memegen.link API.
 
 ## Features
 
-The server provides three tools:
+The server provides three powerful meme tools:
 
-1. **Calculator** - Perform basic arithmetic calculations
-2. **Text Transform** - Transform text (uppercase, lowercase, reverse)
-3. **Word Count** - Analyze text for word, character, and line counts
+1. **Show All Meme Templates** - Browse all available meme templates from Memegen.link
+2. **Show Meme Template** - View details and preview of a specific meme template
+3. **Compose Meme** - Generate custom memes with intelligent template selection and text placement
 
 ## Prerequisites
 
@@ -27,6 +27,12 @@ pnpm install
 
 ```bash
 pnpm run build
+```
+
+3. (Optional) Set up API key for watermark-free memes:
+
+```bash
+export MEMEGEN_API_KEY=your_api_key_here
 ```
 
 ## Usage
@@ -72,64 +78,111 @@ pnpm --dir /path/to/memecp run dev
 
 ## Available Tools
 
-### Calculator
+### Show All Meme Templates
 
-Evaluates mathematical expressions safely.
+Lists all available meme templates from Memegen.link with their names, IDs, and keywords.
+
+**Usage:**
+
+```json
+{
+  "name": "show_all_meme_templates",
+  "arguments": {}
+}
+```
+
+### Show Meme Template
+
+Shows details and preview image for a specific meme template. Supports search by name, ID, or keywords.
 
 **Input:**
 
-- `expression` (string): Mathematical expression (e.g., "2 + 3 \* 4")
+- `name` (string): Name, ID, or keyword of the meme template
 
 **Example:**
 
 ```json
 {
-  "name": "calculator",
+  "name": "show_meme_template",
   "arguments": {
-    "expression": "10 + 5 * 2"
+    "name": "fine"
   }
 }
 ```
 
-### Text Transform
+### Compose Meme
 
-Transforms text using various operations.
+Generates a custom meme with automatic template selection and intelligent text placement.
 
 **Input:**
 
-- `text` (string): Text to transform
-- `operation` (string): One of "uppercase", "lowercase", "reverse"
+- `text` (string): Text content for the meme. Use `|` to split into top/bottom text, or let the AI split it intelligently
+- `template` (string, optional): Specific template name/ID to use. If not provided, the best template is selected automatically
+- `returnImage` (boolean, optional): Whether to return the image data. Defaults to true
 
-**Example:**
+**Examples:**
+
+Auto-selected template:
 
 ```json
 {
-  "name": "text_transform",
+  "name": "compose_meme",
   "arguments": {
-    "text": "Hello World",
-    "operation": "uppercase"
+    "text": "Updating documentation | Actually reading the code first"
   }
 }
 ```
 
-### Word Count
-
-Analyzes text and provides statistics.
-
-**Input:**
-
-- `text` (string): Text to analyze
-
-**Example:**
+Specific template:
 
 ```json
 {
-  "name": "word_count",
+  "name": "compose_meme",
   "arguments": {
-    "text": "Hello world!\nThis is a test."
+    "text": "One does not simply | Write documentation without bugs",
+    "template": "mordor"
   }
 }
 ```
+
+Smart text parsing:
+
+```json
+{
+  "name": "compose_meme",
+  "arguments": {
+    "text": "When you find out the README describes a completely different project than what the code actually does"
+  }
+}
+```
+
+## Template Selection Intelligence
+
+The compose tool includes smart template selection based on text content:
+
+- **Choice/comparison text** (vs, or, choose) → Two Buttons template
+- **Intelligence/brain text** → Expanding Brain template
+- **"Fine" or disaster text** → This is Fine template
+- **"Change my mind" text** → Change My Mind template
+- **Distraction/comparison** → Distracted Boyfriend template
+- **And many more patterns...**
+
+## Text Encoding
+
+The server automatically handles special character encoding for URLs:
+
+- Spaces become underscores
+- Special characters are properly escaped
+- Line breaks and formatting are preserved
+
+## API Integration
+
+This server uses the [Memegen.link API](https://memegen.link) which provides:
+
+- 200+ popular meme templates
+- High-quality image generation
+- Customizable text styling
+- Optional API key for watermark removal
 
 ## Development
 
